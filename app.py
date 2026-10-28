@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 import os
 from collections import Counter
+import requests
+import base64
+import json
+from io import StringIO
+
 # ==========================================
 # CẤU HÌNH GITHUB API (Đọc cấu hình bảo mật)
 # ==========================================
@@ -11,6 +16,35 @@ GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Dòng này GIỮ NGUYÊN (Streamlit
 REPO_NAME = "nguyenminhtam19972007-spec/xosovietlot"  # 🔴 BẮT BUỘC SỬA: Thay bằng Tên GitHub/Tên Repo của bạn
 FILE_PATH = "data_goc.csv"  # 🔴 SỬA NẾU CẦN: Đường dẫn nếu file nằm trong thư mục con (VD: "data/data_goc.csv")
 BRANCH_NAME = "main"  # 🔴 SỬA NẾU CẦN: Đổi thành "master" nếu repo của bạn dùng tên nhánh cũ
+
+API_URL = f"https://github.com{REPO_NAME}/contents/{FILE_PATH}"
+HEADERS = {
+    "Authorization": f"token {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github.v3+json"
+}
+
+def load_data_from_github():
+    response = requests.get(API_URL, headers=HEADERS, params={"ref": BRANCH_NAME})
+    if response.status_code == 200:
+        res_json = response.json()
+        sha = res_json["sha"]
+        content = base64.b64decode(res_json["content"]).decode("utf-8")
+        return pd.read_csv(StringIO(content)), sha
+    return pd.DataFrame(columns=[f"Num{i}" for i in range(1, 7)]), None
+
+def save_data_to_github(new_df, sha):
+    csv_string = new_df.to_csv(index=False)
+    content_b64 = base64.b64encode(csv_string.encode("utf-8")).decode("utf-8")
+    data = {
+        "message": "Cập nhật bộ số mới từ Streamlit App",
+        "content": content_b64,
+        "branch": BRANCH_NAME
+    }
+    if sha:
+        data["sha"] = sha
+    response = requests.put(API_URL, headers=HEADERS, data=json.dumps(data))
+    return response.status_code in [200, 201]
+
 
 # 1. Cấu hình giao diện ứng dụng trên iPhone
 st.set_page_config(page_title="Phần Mềm Gauss Ma Trận Cặp Số", layout="wide")
@@ -25,25 +59,6 @@ SO_TRONG_HINH = [
     4, 8, 14, 22, 35, 42,
     7, 13, 20, 29, 41, 44
 ]
-
-DATA_FILE = "data_goc.csv"
-
-# Tự động nạp sẵn dữ liệu từ ảnh gốc nếu chưa có file
-if not os.path.exists(DATA_FILE):
-    df_init = pd.DataFrame([
-    6, 12, 24, 30, 38, 40,
-    1, 10, 21, 27, 34, 43,
-    3, 15, 19, 26, 32, 36,
-    2, 11, 16, 25, 31, 45,
-    4, 8, 14, 22, 35, 42,
-    7, 13, 20, 29, 41, 44
-    ], columns=[f"Num{i}" for i in range(1, 7)])
-    df_init.to_csv(DATA_FILE, index=False)
-
-def load_data():
-    return pd.read_csv(DATA_FILE)
-
-df_tho = load_data()
 
 # Khởi tạo bộ nhớ tạm để khóa kết quả dự đoán trên iPhone
 if "ket_qua_du_doan" not in st.session_state:
@@ -72,11 +87,23 @@ with col_trai:
         if len(set(bo_so_moi)) < 6:
             st.error("❌ Vui lòng không nhập trùng các con số trong cùng một kỳ!")
         else:
-            # 1. Ghi dữ liệu mới vào file lưu trữ
-            new_row = pd.DataFrame([[n1, n2, n3, n4, n5, n6]], columns=df_tho.columns)
-            df_tho = pd.concat([df_tho, new_row], ignore_index=True)
-            df_tho.to_csv(DATA_FILE, index=False)
-            st.success("🎉 Đã lưu bộ số mới thành công!")
+            with st.spinner("🔄 Đang đồng bộ trực tiếp lên kho lưu trữ GitHub..."):
+                # Tải dữ liệu mới nhất và mã SHA để tránh xung đột ghi đè
+                df_latest, latest_sha = load_data_from_github()
+                
+                # Gộp dòng số mới nhập vào dữ liệu chung
+                new_row = pd.DataFrame([[n1, n2, n3, n4, n5, n6]], columns=df_latest.columns)
+                df_tho = pd.concat([df_latest, new_row], ignore_index=True)
+                
+                # Đẩy trực tiếp lên kho lưu trữ GitHub qua API
+                success = save_data_to_github(df_tho, latest_sha)
+                
+                if success:
+                    st.success("🎉 Đã lưu bộ số mới lên GitHub thành công!")
+                else:
+                    st.error("❌ Không thể đẩy dữ liệu lên GitHub. Vui lòng kiểm tra lại quyền của GITHUB_TOKEN.")
+            
+            # (Giữ nguyên toàn bộ phần mã nguồn xử lý thuật toán 'cap_so_counts' và chuông Gauss ở phía dưới của bạn...)
             
             # 2. Thuật toán phân tích Ma trận cặp số kết hợp chuông Gauss
             cap_so_counts = Counter()
