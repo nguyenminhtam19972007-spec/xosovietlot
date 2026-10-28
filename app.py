@@ -60,7 +60,23 @@ SO_TRONG_HINH = [
     7, 13, 20, 29, 41, 44
 ]
 # Gọi hàm để nạp dữ liệu từ GitHub vào biến df_tho khi bắt đầu chạy ứng dụng
-df_tho, current_file_sha = load_data_from_github()
+# Gọi hàm để nạp dữ liệu từ GitHub, nếu lỗi mạng thì đọc file cục bộ dự phòng
+try:
+    df_tho, current_file_sha = load_data_from_github()
+except requests.exceptions.ConnectionError:
+    st.warning("⚠️ Đang mất kết nối tới GitHub. Ứng dụng tự động chuyển sang chế độ dữ liệu dự phòng.")
+    # Khởi tạo dữ liệu nền tảng cục bộ tạm thời để app không bị crash
+    df_tho = pd.DataFrame([
+    6, 12, 24, 30, 38, 40,
+    1, 10, 21, 27, 34, 43,
+    3, 15, 19, 26, 32, 36,
+    2, 11, 16, 25, 31, 45,
+    4, 8, 14, 22, 35, 42,
+    7, 13, 20, 29, 41, 44
+               
+    ], columns=[f"Num{i}" for i in range(1, 7)])
+    current_file_sha = None
+
 
 # Khởi tạo bộ nhớ tạm để khóa kết quả dự đoán trên iPhone
 if "ket_qua_du_doan" not in st.session_state:
