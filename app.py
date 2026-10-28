@@ -59,6 +59,8 @@ SO_TRONG_HINH = [
     4, 8, 14, 22, 35, 42,
     7, 13, 20, 29, 41, 44
 ]
+# Gọi hàm để nạp dữ liệu từ GitHub vào biến df_tho khi bắt đầu chạy ứng dụng
+df_tho, current_file_sha = load_data_from_github()
 
 # Khởi tạo bộ nhớ tạm để khóa kết quả dự đoán trên iPhone
 if "ket_qua_du_doan" not in st.session_state:
