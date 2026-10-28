@@ -23,19 +23,20 @@ SO_TRONG_HINH = [
     3, 15, 19, 26, 32, 36,
     2, 11, 16, 25, 31, 45,
     4, 8, 14, 22, 35, 42,
-    7, 13, 20, 29,41, 44
+    7, 13, 20, 29, 41, 44
 ]
 
 DATA_FILE = "data_goc.csv"
 
 # Tự động nạp sẵn dữ liệu từ ảnh gốc nếu chưa có file
 if not os.path.exists(DATA_FILE):
-    df_init = pd.DataFrame([,
- ,
- ,
- ,
- ,
-        [7, 13, 20, 29, 38, 44]
+    df_init = pd.DataFrame([
+    6, 12, 24, 30, 38, 40,
+    1, 10, 21, 27, 34, 43,
+    3, 15, 19, 26, 32, 36,
+    2, 11, 16, 25, 31, 45,
+    4, 8, 14, 22, 35, 42,
+    7, 13, 20, 29, 41, 44
     ], columns=[f"Num{i}" for i in range(1, 7)])
     df_init.to_csv(DATA_FILE, index=False)
 
