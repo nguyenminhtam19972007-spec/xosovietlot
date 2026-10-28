@@ -132,7 +132,11 @@ with col_trai:
                         tong_so = sum(so_da_chon)
                         if 110 <= tong_so <= 210:
                             so_chan = sum(1 for x in so_da_chon if x % 2 == 0)
-                            if so_chan in:
+                            if so_chan in[
+                                2,
+                                3,
+                                4,
+                            ]:  # Đã sửa: chọn tỷ lệ chẵn lẻ cân bằng lý tưởng nhất
                                 bo_so_hop_le = True
                 
                 so_da_chon.sort()
