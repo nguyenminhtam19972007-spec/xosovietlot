@@ -3,6 +3,14 @@ import pandas as pd
 import numpy as np
 import os
 from collections import Counter
+# ==========================================
+# CẤU HÌNH GITHUB API (Đọc cấu hình bảo mật)
+# ==========================================
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]  # Dòng này GIỮ NGUYÊN (Streamlit tự nạp từ mục Secrets)
+
+REPO_NAME = "nguyenminhtam19972007-spec/xosovietlot"  # 🔴 BẮT BUỘC SỬA: Thay bằng Tên GitHub/Tên Repo của bạn
+FILE_PATH = "data_goc.csv"  # 🔴 SỬA NẾU CẦN: Đường dẫn nếu file nằm trong thư mục con (VD: "data/data_goc.csv")
+BRANCH_NAME = "main"  # 🔴 SỬA NẾU CẦN: Đổi thành "master" nếu repo của bạn dùng tên nhánh cũ
 
 # 1. Cấu hình giao diện ứng dụng trên iPhone
 st.set_page_config(page_title="Phần Mềm Gauss Ma Trận Cặp Số", layout="wide")
